@@ -1,0 +1,6 @@
+version: '3.7'
+services:
+  evaluation-backend-rbenitez:
+    build: .
+    ports:
+      - "8080:8080"
