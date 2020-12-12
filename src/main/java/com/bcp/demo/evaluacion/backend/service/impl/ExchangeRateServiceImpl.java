@@ -1,6 +1,8 @@
 package com.bcp.demo.evaluacion.backend.service.impl;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +15,7 @@ import com.bcp.demo.evaluacion.backend.repository.model.CurrencyEntity;
 import com.bcp.demo.evaluacion.backend.service.ExchangeRateService;
 
 import io.reactivex.Maybe;
+import io.reactivex.Observable;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -21,6 +24,29 @@ public class ExchangeRateServiceImpl implements ExchangeRateService {
 
 	@Autowired
 	private CurrencyRepository currencyRepository;
+
+	@Override
+	public Maybe<Void> create(List<CurrencyRequestDto> request) {
+		request.forEach(item -> {
+			currencyRepository.save(CurrencyEntity.of(null, item.getSourceCurrency(), item.getDestinyCurrency(),
+					new BigDecimal(item.getRate())));
+		});
+		return Maybe.empty();
+	}
+
+	@Override
+	public Observable<CurrencyResponseDto> currency() {
+		List<CurrencyEntity> list = currencyRepository.findAll();
+		List<CurrencyResponseDto> listResponse = new ArrayList<>();
+		list.forEach(entity -> {
+			CurrencyResponseDto response = new CurrencyResponseDto();
+			response.setSourceCurrency(entity.getCode());
+			response.setDestinyCurrency(entity.getCodeDestiny());
+			response.setRate(entity.getRate().toPlainString());
+			listResponse.add(response);
+		});
+		return Observable.fromIterable(listResponse);
+	}
 
 	@Override
 	public Maybe<CurrencyResponseDto> currency(CurrencyRequestDto request) {
@@ -50,13 +76,12 @@ public class ExchangeRateServiceImpl implements ExchangeRateService {
 	private Maybe<CurrencyEntity> getFromDatabase(CurrencyRequestDto request) {
 		if (request.getSourceCurrency().contentEquals(request.getDestinyCurrency())) {
 			return Maybe.just(
-					CurrencyEntity.of(null, request.getDestinyCurrency(), request.getSourceCurrency(), 
-							BigDecimal.ONE));
+					CurrencyEntity.of(null, request.getDestinyCurrency(), request.getSourceCurrency(), BigDecimal.ONE));
 		}
 		CurrencyEntity entity = null;
 		try {
-			entity = currencyRepository.findByCodeAndCodeDestiny(request.getDestinyCurrency(),
-					request.getSourceCurrency());
+			entity = currencyRepository.findByCodeAndCodeDestiny(request.getSourceCurrency(),
+					request.getDestinyCurrency());
 		} catch (HibernateException exc) {
 			log.error(exc.getMessage(), exc);
 		}

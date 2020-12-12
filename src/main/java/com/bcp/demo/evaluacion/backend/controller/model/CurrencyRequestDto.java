@@ -10,4 +10,5 @@ public class CurrencyRequestDto {
 	private String amount;
 	private String sourceCurrency;
 	private String destinyCurrency;
+	private String rate;
 }

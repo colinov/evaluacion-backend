@@ -32,7 +32,7 @@ public class ExchangeRateRestTest {
 		response.setAmountWithRate("3.45");
 		response.setRate("3.45");
 		Mockito.when(exchangeRateService.currency(Mockito.any())).thenReturn(Maybe.just(response));
-		TestObserver<ResponseEntity<CurrencyResponseDto>> test = exchangeRateRest.currencyRate(request).test();
+		TestObserver<ResponseEntity<CurrencyResponseDto>> test = exchangeRateRest.rate(request).test();
 		test.awaitTerminalEvent();
 		test.assertNoErrors();
 		test.assertValue(value -> value.getBody() != null);
@@ -44,9 +44,8 @@ public class ExchangeRateRestTest {
 		CurrencyRequestDto request = new CurrencyRequestDto();
 		request.setAmount("1");
 		Mockito.when(exchangeRateService.currency(Mockito.any())).thenReturn(Maybe.empty());
-		TestObserver<ResponseEntity<CurrencyResponseDto>> test = exchangeRateRest.currencyRate(request).test();
+		TestObserver<ResponseEntity<CurrencyResponseDto>> test = exchangeRateRest.rate(request).test();
 		test.awaitTerminalEvent();
-		test.assertNoErrors();
-		test.assertValue(value -> value.getBody() == null);
+		test.assertError(RuntimeException.class);
 	}
 }
